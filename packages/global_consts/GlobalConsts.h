@@ -9,12 +9,26 @@
 //=== Coarse mode, no driftTime info is used, disabled by default
 //#define COARSE_MODE
 
+//For Cosmic 
+#define COSMIC
+
 //---------------------FOLLOWING PART SHOULD NOT BE CHANGED FOR NO GOOD REASON -----------------------
 //--------------- Fast tracking configuration ----
+
+#ifndef COSMIC
 #define TX_MAX 0.15
 #define TY_MAX 0.1
 #define X0_MAX 150.
 #define Y0_MAX 50.
+#endif
+
+#ifdef COSMIC
+#define TX_MAX 15
+#define TY_MAX 15
+#define X0_MAX 99999.
+#define Y0_MAX 99999.
+#endif
+
 #define INVP_MIN 0.01
 #define INVP_MAX 0.2
 #define PROB_LOOSE 0.0

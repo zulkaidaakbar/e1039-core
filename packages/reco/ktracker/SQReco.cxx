@@ -1,6 +1,7 @@
 #include "SQReco.h"
 
 #include "KalmanFastTracking.h"
+#include "CosmicFastTracking.h"
 #include "EventReducer.h"
 
 #include <phfield/PHFieldConfig_v3.h>
@@ -108,9 +109,14 @@ int SQReco::InitRun(PHCompositeNode* topNode)
   if(ret != Fun4AllReturnCodes::EVENT_OK) return ret;
 
   //Init track finding
+  #ifndef COSMIC
   _fastfinder = new KalmanFastTracking(_phfield, _t_geo_manager, false);
-  _fastfinder->Verbosity(Verbosity());
+  #endif
 
+  #ifdef COSMIC
+  _fastfinder = new CosmicFastTracking(_phfield, _t_geo_manager, false);
+  #endif
+  _fastfinder->Verbosity(Verbosity());
   if(_evt_reducer_opt == "none")  //Meaning we disable the event reducer
   {
     _eventReducer = nullptr;
@@ -285,7 +291,8 @@ SRawEvent* SQReco::BuildSRawEvent()
   sraw_event->setTargetPos(1);
 
   //Get beam information - QIE -- not implemented yet
-
+  //Get GeomSvc
+  GeomSvc *p_geomSvc = GeomSvc::instance();
   //Get trigger hits - TriggerHit
   if(_triggerhit_vector) 
   {
@@ -301,6 +308,10 @@ SRawEvent* SQReco::BuildSRawEvent()
       h.tdcTime = sq_hit->get_tdc_time();
       h.driftDistance = fabs(sq_hit->get_drift_distance()); //MC L-R info removed here
       h.pos = sq_hit->get_pos();
+      #ifdef COSMIC
+	//h.pos = sq_hit->get_pos();
+        h.pos = p_geomSvc->getMeasurement(h.detectorID,h.elementID);
+      #endif
 
       if(sq_hit->is_in_time()) h.setInTime();
       sraw_event->insertTriggerHit(h);
@@ -318,6 +329,10 @@ SRawEvent* SQReco::BuildSRawEvent()
     h.tdcTime = sq_hit->get_tdc_time();
     h.driftDistance = fabs(sq_hit->get_drift_distance()); //MC L-R info removed here
     h.pos = sq_hit->get_pos();
+    #ifdef COSMIC
+	//h.pos = sq_hit->get_pos();
+        h.pos = p_geomSvc->getMeasurement(h.detectorID,h.elementID);
+    #endif
 
     if(sq_hit->is_in_time()) h.setInTime();
     sraw_event->insertHit(h);
